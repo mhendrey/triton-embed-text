@@ -1,30 +1,27 @@
-# triton-translate
-A Triton Inference Server model repository for machine translation
+# triton-embed-text
+A Triton Inference Server model repository for embedding text
 
-Machine translation models translate text from one language to another, a long-standing
-application of neural networks. However, this history presents some challenges.
-Traditionally, most models were trained on sentence-level language pairs due to memory
-limitations in early approaches. Consequently, even modern architectures, capable of
-handling much larger contexts, often prematurely end translations after only a sentence
-or two. This necessitates the development of text segmentation techniques to divide a
-client's input into manageable chunks suitable for the translation model.
+Text embedding models convert text into dense numerical vectors, capturing semantic
+meaning in a high-dimensional space. These vector representations enable machines to
+process and understand textual data more effectively, facilitating various natural
+language processing tasks.
 
-The [translate](docs/translate.md) deployment is the main interface that should be
-used by most clients. Currently supported models utilized by translate:
+* Document clustering and classification
+    * Allows for making smaller downstream models that need less labeled data
+* Semantic search and information retrieval
+    * When paired with corresponding image embedding, enables searching for images by writing the alt-text description.
+* Question/Answering Systems
 
-* [fastText Language Detection](docs/fasttext_language_identification.md)
-  Language identification model. Currently the only available, but future versions may
-  include Lingua.
-* [Sentencex](docs/sentencex.md)
-  Lightweight sentence segmentation. Seems to work well for most languages, with Thai
-  and Khmer being noticeable exceptions given their lack of punctutation. Additional
-  options like PySBD may be added in the future.
-* [SeamlessM4Tv2Large](docs/seamlessm4t_text2text.md)
-  Machine translation model that utilizes just the Text-to-Text portion of the
-  SeamlessM4T model.
-* [NLLB](docs/nllb_200_distilled_600M.md)
-  Machine translation model suitable for faster, though slightly worse, translations.
+The [embed_text](docs/embed_text.md) deployment is the main interface that should be
+used by most clients. Currently supported models accessible within embed_text:
 
+* [Multilingual E5 Text](docs/multilingual_e5_large.md) (default)
+  Trained specifically to support multilingual retrieval capabilities, cross-lingual
+  similarity search, and multilingual document classification.
+* [SigLIP Text](docs/siglip_text.md)
+  Use in conjunction with SigLIP Vision to perform zero-shot learning or semantic
+  searching of images with textual descriptions.
+  
 ## Running Tasks
 Running tasks is orchestrated by using [Taskfile.dev](https://taskfile.dev/)
 
@@ -42,7 +39,7 @@ The `Taskfile.yml` includes the following tasks:
 - `triton-stop`
 - `model-import`
 - `build-execution-env-all`
-- `build-*-env` (with options: `fasttext_language_identification`, `sentencex`, `seamlessm4t_text2text`, `nllb_200_distilled_600M`)
+- `build-*-env` (with options: `embed_text`, `multilingual_e5_large`, `siglip_text`)
 
 ## Task Descriptions
 
@@ -84,7 +81,7 @@ Builds specific conda pack environments used by Triton
 
 ```sh
 #Example 
-task build-sentencex-env
+task build-siglip_text-env
 ```
 
 ### `Complete Order`
