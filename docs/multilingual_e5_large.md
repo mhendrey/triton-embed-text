@@ -209,9 +209,6 @@ cosine distance itself. The second is based upon a margin scoring approach that 
 referenced in the technical approach. This approach is outlined in
 [Margin-based Parallel Corpus Mining with Multilingual Sentence Embeddings](https://arxiv.org/abs/1811.01136).
 
-The code can be found in the [validate.py](../model_repository/multilingual_e5_large/validate.py)
-file.
-
 ### Results
 
 | Language Pairs | Margin Accuracy | Cosine Accuracy | # of Records |
