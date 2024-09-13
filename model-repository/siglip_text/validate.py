@@ -2,7 +2,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
 import os
 from pathlib import Path
+from PIL import Image
 import requests
+import torch
+from transformers import SiglipVisionModel, SiglipProcessor
 from sklearn import neighbors, metrics
 
 
@@ -41,9 +44,8 @@ def get_image_embeddings(
     input_dir: Path, n_categories: int = 0, n_samples_per_category: int = 0
 ):
     """
-    Iterate through input directory of images and submit them to Triton Inference
-    Server to get their image embeddings. The category label is the first part of the
-    file's name.
+    Iterate through input directory of images and get their image embeddings.
+    The category label is the first part of the file's name.
 
     Parameters
     ----------
@@ -62,54 +64,43 @@ def get_image_embeddings(
     Y: np.ndarray, shape=(-1,)
         Synset category
     """
+    model = SiglipVisionModel.from_pretrained(
+        "google/siglip-so400m-patch14-384",
+        device_map="auto",
+        torch_dtype=torch.float16,
+    )
+    processor = SiglipProcessor.from_pretrained("google/siglip-so400m-patch14-384")
+
     category_dirs = list(input_dir.iterdir())
     if n_categories > 0:
         np.random.shuffle(category_dirs)
         category_dirs = category_dirs[:n_categories]
     X = []
     Y = []
-    with ThreadPoolExecutor(max_workers=60) as executor:
-        for i, category_dir in enumerate(category_dirs):
-            futures = {}
-            for j, image_file in enumerate(category_dir.iterdir()):
-                if j == n_samples_per_category and n_samples_per_category > 0:
-                    break
-                image_bytes = image_file.read_bytes()
-                if image_file.is_file():
-                    future = executor.submit(
-                        requests.post,
-                        url="http://localhost:8000/v2/models/embed_image/infer",
-                        data=image_bytes,
-                        headers={
-                            "Content-Type": "application/octet-stream",
-                            "Inference-Header-Content-Length": "0",
-                        },
+    for i, category_dir in enumerate(category_dirs):
+        for j, image_file in enumerate(category_dir.iterdir()):
+            if j == n_samples_per_category and n_samples_per_category > 0:
+                break
+            if image_file.is_file():
+                image = Image.open(image_file).convert("RGB")
+                image = processor(images=image, return_tensors="pt").to(
+                    model.device, dtype=torch.float16
+                )
+                with torch.no_grad():
+                    embedding = (
+                        model.forward(**image)
+                        .pooler_output.to("cpu")
+                        .numpy()
+                        .astype(np.float32)
                     )
-                    futures[future] = image_file.name.split(".")[0]
+                X.append(embedding)
+                Y.append(category_dir.name)
 
-            for future in as_completed(futures):
-                try:
-                    response = future.result()
-                    label = futures[future].split("_")[0]
-                except Exception as exc:
-                    print(f"{futures[future]} threw {exc}")
-                else:
-                    try:
-                        header_length = int(
-                            response.headers["Inference-Header-Content-Length"]
-                        )
-                        embedding = np.frombuffer(
-                            response.content[header_length:], dtype=np.float32
-                        )
-                        X.append(embedding)
-                        Y.append(label)
-                    except Exception as exc:
-                        print(ValueError(f"Error getting data from response: {exc}"))
-            if (i + 1) % 250 == 0:
-                print(f"{(i+1):03} Finished {category_dir.name}")
+        if (i + 1) % 250 == 0:
+            print(f"{(i+1):03} Finished {category_dir.name}")
 
-        X = np.vstack(X)
-        Y = np.array(Y)
+    X = np.vstack(X)
+    Y = np.array(Y)
 
     return X, Y
 
@@ -145,6 +136,7 @@ def zero_shot(labels_text: dict):
                 requests.post,
                 url="http://localhost:8000/v2/models/embed_text/infer",
                 json={
+                    "parameters": {"embed_model": "siglip_text"},
                     "inputs": [
                         {
                             "name": "INPUT_TEXT",
@@ -152,7 +144,7 @@ def zero_shot(labels_text: dict):
                             "datatype": "BYTES",
                             "data": [prompt],
                         }
-                    ]
+                    ],
                 },
             )
             futures[future] = label
