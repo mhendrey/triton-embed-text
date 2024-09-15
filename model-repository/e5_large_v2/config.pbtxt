@@ -1,0 +1,59 @@
+name: "e5_large_v2"
+platform: "ensemble"
+max_batch_size: 32
+
+input [
+    {
+        name: "INPUT_TEXT"
+        data_type: TYPE_STRING
+        dims: [1]
+    }
+]
+output [
+    {
+        name: "EMBEDDING"
+        data_type: TYPE_FP32
+        dims: [1024]
+    }
+]
+
+ensemble_scheduling: {
+    step: [
+        {
+            model_name: "e5_large_v2_tokenize"
+            model_version: -1
+            input_map {
+                key: "INPUT_TEXT"
+                value: "INPUT_TEXT"
+            }
+            output_map [
+                {
+                    key: "INPUT_IDS"
+                    value: "INPUT_IDS"
+                },
+                {
+                    key: "ATTENTION_MASK"
+                    value: "ATTENTION_MASK"
+                }
+            ]
+        },
+        {
+            model_name: "e5_large_v2_model"
+            model_version: -1
+            input_map [
+                {
+                    key: "INPUT_IDS"
+                    value: "INPUT_IDS"
+                },
+                {
+                    key: "ATTENTION_MASK"
+                    value: "ATTENTION_MASK"
+                }
+            ]
+            output_map {
+                key: "EMBEDDING"
+                value: "EMBEDDING"
+            }
+        }
+    ]
+}

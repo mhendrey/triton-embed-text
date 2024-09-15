@@ -21,6 +21,8 @@ tasks:
       - test -f ./model-repository/multilingual_e5_large_tokenize/multilingual_e5_large_tokenize.tar.gz
       - test -f ./model-repository/siglip_text_model/siglip_text_model.tar.gz
       - test -f ./model-repository/siglip_text_tokenize/siglip_text_tokenize.tar.gz
+      - test -f ./model-repository/e5_large_v2_tokenize/e5_large_v2_tokenize.tar.gz
+      - test -f ./model-repository/e5_large_v2_model/e5_large_v2_model.tar.gz
 
 
   triton-stop:
@@ -38,6 +40,7 @@ tasks:
       - mkdir -p models
       - huggingface-cli download google/siglip-so400m-patch14-384 --cache-dir models
       - huggingface-cli download intfloat/multilingual-e5-large --cache-dir models
+      - huggingface-cli download intfloat/e5-large-v2 --cache-dir models
 
   build-execution-env-all:
     desc: "Tasks to build all execution environments"
@@ -47,6 +50,8 @@ tasks:
       build-multilingual_e5_large_tokenize-env,
       build-siglip_text-env,
       build-siglip_text_tokenize-env,
+      build-e5_large_v2_tokenize-env,
+      build-e5_large_v2_model-env,
     ]
 
   build-*-env:

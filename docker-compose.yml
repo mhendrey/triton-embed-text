@@ -17,6 +17,9 @@ x-base_inference_service: &base_inference_service
       --load-model=siglip_text \
       --load-model=siglip_text_tokenize \
       --load-model=siglip_text_model \
+      --load-model=e5_large_v2 \
+      --load-model=e5_large_v2_tokenize \
+      --load-model=e5_large_v2_model \
       --log-verbose=1 \
       --log-format=ISO8601 \
       --log-info=true \

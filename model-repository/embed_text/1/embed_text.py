@@ -1,6 +1,5 @@
 import asyncio
 import json
-from transformers import AutoProcessor, AutoTokenizer
 
 import triton_python_backend_utils as pb_utils
 

@@ -8,7 +8,7 @@ import triton_python_backend_utils as pb_utils
 class TritonPythonModel:
     """
     Triton Inference Server deployment utilizing the python_backend for the
-    Multilingual-e5-Large text embedding model.
+    E5-v2-Large text embedding model.
     """
 
     @staticmethod
@@ -36,7 +36,7 @@ class TritonPythonModel:
 
     def initialize(self, args):
         """
-        Initialize Multilingual-e5-large and load configuration parameters. Using
+        Initialize e5-large-v2 and load configuration parameters. Using
         torch.compile() to speed up inference. The first few passes through the model
         may be delayed while torch.compile() does its magic.
 
@@ -68,9 +68,7 @@ class TritonPythonModel:
         """
         Execute a batch of embedding requests on provided texts that have already
         been converted to `input_ids`. When using the Tokenizer, set
-        padding='max_length'.
-
-        **NOTE** We may need to pass in attention mask too. Or construct it on the fly.
+        padding='max_length'. Provide `attention_mask` too.
 
         Shape = (512,), dtype=np.int64
 
@@ -88,8 +86,7 @@ class TritonPythonModel:
             torch.cuda.empty_cache()
         logger = pb_utils.Logger
         batch_size = len(requests)
-        logger.log_info(f"multilingual_e5_large_model.execute received "
-                        + f"{batch_size} requests")
+        logger.log_info(f"e5_large_v2_model.execute received {batch_size} requests")
         responses = [None] * batch_size
         batch_input_ids = []
         batch_attention_mask = []
@@ -141,8 +138,8 @@ class TritonPythonModel:
             for i in valid_requests:
                 response = pb_utils.InferenceResponse(
                     error=pb_utils.TritonError(
-                        "multilingual-e5-large threw error embedding the batch. Check your "
-                        + f"input text and/or try again. {exc}"
+                        "e5_large_v2_model threw error embedding the batch. Check "
+                        + f"your input text and/or try again. {exc}"
                     )
                 )
                 responses[i] = response
