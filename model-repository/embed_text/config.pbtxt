@@ -24,12 +24,6 @@ parameters: [
         value: {string_value: "$$TRITON_MODEL_DIRECTORY/embed_text.tar.gz"},
     },
     {
-        key: "embed_models",
-        value: {
-            string_value: "{\"siglip_text\": \"/hub/models--google--siglip-so400m-patch14-384/snapshots/7067f6db2baa594bab7c6d965fe488c7ac62f1c8/\", \"multilingual_e5_large\": \"/hub/models--intfloat--multilingual-e5-large/snapshots/ab10c1a7f42e74530fe7ae5be82e6d4f11a719eb/\"}"
-        },
-    },
-    {
         key: "default_embed_model",
         value: {string_value: "multilingual_e5_large"},
     }
@@ -37,7 +31,7 @@ parameters: [
 instance_group [
     {
         kind: KIND_CPU,
-        count: 1
+        count: 3
     }
 ]
 version_policy: {latest: {num_versions: 1}}

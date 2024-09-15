@@ -98,6 +98,7 @@ class TritonPythonModel:
         logger.log_info(f"multilingual-e5-large.execute received {batch_size} requests")
         responses = [None] * batch_size
         batch_input_ids = []
+        batch_attention_mask = []
         valid_requests = []
         for batch_id, request in enumerate(requests):
             try:
@@ -107,6 +108,12 @@ class TritonPythonModel:
                         "INPUT_IDS",
                     ).as_numpy()
                 )
+                attention_mask = torch.from_numpy(
+                    pb_utils.get_input_tensor_by_name(
+                        request,
+                        "ATTENTION_MASK",
+                    ).as_numpy()
+                )
             except Exception as exc:
                 response = pb_utils.InferenceResponse(
                     error=pb_utils.TritonError(f"{exc}")
@@ -114,21 +121,23 @@ class TritonPythonModel:
                 responses[batch_id] = response
             else:
                 batch_input_ids.append(input_ids)
+                batch_attention_mask.append(attention_mask)
                 valid_requests.append(batch_id)
 
         # Create batch to be processed shape=[len(valid_requests), 512]
-        batch_input_ids = torch.cat(batch_input_ids, dim=0)
-        attention_mask = (batch_input_ids != self.pad_value).type(torch.int64)
-        batch_input_ids = batch_input_ids.to(self.device)
-        attention_mask = attention_mask.to(self.device)
+        batch_input_ids = torch.cat(batch_input_ids, dim=0).to(self.device)
+        batch_attention_mask = torch.cat(batch_attention_mask, dim=0).to(self.device)
+        #attention_mask = (batch_input_ids != self.pad_value).type(torch.int64)
+        #batch_input_ids = batch_input_ids.to(self.device)
+        #attention_mask = attention_mask.to(self.device)
         try:
             with torch.no_grad():
                 outputs = self.model(
-                    input_ids=batch_input_ids, attention_mask=attention_mask
+                    input_ids=batch_input_ids, attention_mask=batch_attention_mask
                 )
                 embeddings = (
                     TritonPythonModel.average_pool(
-                        outputs.last_hidden_state, attention_mask
+                        outputs.last_hidden_state, batch_attention_mask
                     )
                     .cpu()
                     .type(torch.float32)
