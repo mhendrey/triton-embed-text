@@ -1,19 +1,23 @@
 #  Multilingual E5 Text Embeddings
 This deployment hosts the [Multilingual-E5-large](https://huggingface.co/intfloat/multilingual-e5-large)
-text embedding model. It takes in the input tokens for text and returns the embedding vector
-(d=1024) that can be used information retrieval or building downstream classified. The
-inputs are integer indices of the tokenizer and the output are float32.
+text embedding model. You provide it your text and it returns the embedding vector
+(d=1024) that can be used for information retrieval or building downstream classifiers.
+This is a Triton Inference Server
+[ensemble](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/user_guide/architecture.html#ensemble-models)
+of the [multilingual_e5_large_tokenizer](../model_repository/multilingual_e5_large_tokenizer)
+(CPU) and the [multilingual_e5_large_model](../model_repository/multilingual_e5_large_model)
+(GPU) deployment models.
 
 **Note**
-  * Maximum input token size is 512 tokens which is the expected size. Set
-    'padding="max_length"' when tokenizing to pad appropriately
+  * Maximum input token size is 512 tokens which is the expected size. Text longer
+    than this will throw an error.
   * As specified in the Huggingface model card. You need to prefix your text with
     "query: " or "passage: " before tokenizing the text. Note the space after the colon
-      * Use "query:" & "passage:" correspondingly for asymmetric tasks such as
+      * Use "query: " & "passage: " correspondingly for asymmetric tasks such as
         passage retrieval in open QA or ad-hoc information retrieval
       * Use "query:" prefix for symmetric tasks such as semantic similarity, bitext
         mining, paraphrase retrieval
-      * Use "query:" prefix if you want to use embeddings as features, such as linear
+      * Use "query: " prefix if you want to use embeddings as features, such as linear
         probing classification or clustering
 
 Dynamic batching is enabled for this deployment, so clients simply send in each request
@@ -24,30 +28,28 @@ This is a lower level of abstraction, most clients likely should be using
 
 ## Example Request
 Here's an example request. Just a few things to point out
-1. "shape": [1, 512] because we have dynamic batching and the first axis is
-   the batch size and the second axis is the maximum token size (pad with '1').
-2. "data": this should be "row" flattened. It will be reshaped by the server. Also,
-   numpy is not serializable, so convert to python list.
+1. "shape": [1, 1] because we have dynamic batching and the first axis is
+   the batch size and the second axis the number of text strings to send (in this
+   case always 1).
+2. "datatype": "BYTES" because the input text is a string [don't ask why its not
+   'STRING']
 
 ```
 import numpy as np
 import requests
-from transformers import AutoTokenizer
 
 base_url = "http://localhost:8000/v2/models"
-tokenizer = AutoTokenizer.from_pretrained("intfloat/multilingual-e5-large")
 text = (
     "query: The iridescent chameleon sauntered across the neon-lit cyberpunk cityscape."
 )
-input_ids = tokenizer(text, padding="max_length")["input_ids"]
 
 inference_request = {
     "inputs": [
         {
-            "name": "INPUT_IDS",
-            "shape": [1, 512],
-            "datatype": "INT64",
-            "data": input_ids,
+            "name": "INPUT_TEXT",
+            "shape": [1, 1],
+            "datatype": "BYTES",
+            "data": [text],
         }
     ]
 }
@@ -61,14 +63,19 @@ JSON response output looks like
 {
     "model_name": "multilingual_e5_large",
     "model_version": "1",
+    "parameters": {
+        "sequence_id": 0,
+        "sequence_start": False,
+        "sequence_end": False,
+    },
     "outputs": [
         {
             "name": "EMBEDDING",
             "datatype": "FP32",
             "shape": [1, 1024],
             "data": [
-                0.01077766,
-                -0.0.006316,
+                0.00972,
+                -0.0810,
                 ...,
             ]
         }
@@ -84,8 +91,7 @@ embedding = np.array(
 
 ### Sending Many Requests
 If you want to send a lot of text requests to be embedded, it's important that you send
-each request in a multithreaded way to achieve optimal throughput. The example
-below creates 120 random input ids to be embedded.
+each request in a multithreaded way to achieve optimal throughput.
 
 NOTE: You will encounter a "OSError Too many open files" if you send a lot of requests.
 Typically the default ulimit is 1024 on most system. Either increace this using 
@@ -99,22 +105,27 @@ from pathlib import Path
 import requests
 
 base_url = "http://localhost:8000/v2/models"
-rng = np.random.default_rng()
-
-input_ids_batch = rng.integers(low=0, high=25000, size=[120,512]).astype(np.int64)
-
+input_texts = [
+    "query: The iridescent chameleon sauntered across the neon-lit cyberpunk cityscape.",
+    "query: The iridescent chameleon sauntered across the neon-lit cyberpunk cityscape.",
+    "query: The iridescent chameleon sauntered across the neon-lit cyberpunk cityscape.",
+    "query: The iridescent chameleon sauntered across the neon-lit cyberpunk cityscape.",
+    "query: The iridescent chameleon sauntered across the neon-lit cyberpunk cityscape.",
+    "query: The iridescent chameleon sauntered across the neon-lit cyberpunk cityscape.",
+    "query: The iridescent chameleon sauntered across the neon-lit cyberpunk cityscape.",
+]
 
 futures = {}
 embeddings = {}
 with ThreadPoolExecutor(max_workers=60) as executor:
-    for i, input_ids in enumerate(input_ids_batch):
+    for i, text in enumerate(input_texts):
         inference_request = {
             "inputs": [
                 {
-                    "name": "INPUT_IDS",
-                    "shape": [1, 512],
-                    "datatype": "INT64",
-                    "data": input_ids.flatten().tolist(),
+                    "name": "INPUT_TEXT",
+                    "shape": [1, 1],
+                    "datatype": "BYTES",
+                    "data": [text],
                 }
             ]
         }
@@ -126,22 +137,22 @@ with ThreadPoolExecutor(max_workers=60) as executor:
     
     for future in as_completed(futures):
         try:
-            response = future.result()
+            response_json = future.result().json()
         except Exception as exc:
             print(f"{futures[future]} threw {exc}")
         else:
-            try:
-                data = response.json()["outputs"][0]["data"]
+            if "error" not in response_json:
+                data = response_json["outputs"][0]["data"]
                 embedding = np.array(data, dtype=np.float32)
                 embeddings[futures[future]] = embedding
-            except Exception as exc:
-                raise ValueError(f"Error getting data from response: {exc}")
+            else:
+                print(f"{futures[future]} threw {response_json['error']}")
 
 print(embeddings)
 ```
 
 ## Performance Analysis
-There is some data in [data/multilingual_e5_large](../data/multilingual_e5_large/input_ids.json)
+There is some data in [data/embed_text](../data/embed_text/multilingual_text.json)
 which can be used with the `perf_analyzer` CLI in the Triton Inference Server SDK
 container.
 
@@ -149,7 +160,7 @@ container.
 sdk-container:/workspace perf_analyzer \
     -m multilingual_e5_large \
     -v \
-    --input-data data/multilingual_e5_large/input_ids.json \
+    --input-data data/embed_text/multilingual_text.json \
     --measurement-mode=time_windows \
     --measurement-interval=20000 \
     --concurrency-range=60 \
@@ -157,32 +168,41 @@ sdk-container:/workspace perf_analyzer \
 ```
 Gives the following result on an RTX4090 GPU
 
-
 * Request concurrency: 60
-  * Pass [1] throughput: 283.692 infer/sec. Avg latency: 210358 usec (std 43074 usec). 
-  * Pass [2] throughput: 285.814 infer/sec. Avg latency: 210039 usec (std 41954 usec). 
-  * Pass [3] throughput: 285.9 infer/sec. Avg latency: 209959 usec (std 41938 usec). 
+  * Pass [1] throughput: 254.764 infer/sec. Avg latency: 234461 usec (std 36027 usec). 
+  * Pass [2] throughput: 254.9 infer/sec. Avg latency: 235338 usec (std 34028 usec). 
+  * Pass [3] throughput: 255.511 infer/sec. Avg latency: 234226 usec (std 34697 usec). 
   * Client: 
-    * Request count: 20537
-    * Throughput: 285.136 infer/sec
-    * Avg client overhead: 0.02%
-    * Avg latency: 210118 usec (standard deviation 29881 usec)
-    * p50 latency: 206747 usec
-    * p90 latency: 252549 usec
-    * p95 latency: 252905 usec
-    * p99 latency: 255893 usec
-    * Avg HTTP time: 210110 usec (send 66 usec + response wait 210044 usec + receive 0 usec)
+    * Request count: 18369
+    * Throughput: 255.058 infer/sec
+    * Avg client overhead: 0.01%
+    * Avg latency: 234675 usec (standard deviation 14687 usec)
+    * p50 latency: 245945 usec
+    * p90 latency: 249144 usec
+    * p95 latency: 250274 usec
+    * p99 latency: 258071 usec
+    * Avg HTTP time: 234669 usec (send 73 usec + response wait 234596 usec + receive 0 usec)
   * Server: 
-    * Inference count: 20537
-    * Execution count: 857
-    * Successful request count: 20537
-    * Avg request latency: 209706 usec (overhead 20 usec + queue 125809 usec +
-      compute input 150 usec + compute infer 83553 usec + compute output 172 usec)
+    * Inference count: 18369
+    * Execution count: 18369
+    * Successful request count: 18369
+    * Avg request latency: 236117 usec (overhead 0 usec + queue 109536 usec + compute 126845 usec)
+
+  * Composing models: 
+  * multilingual_e5_large_model, version: 1
+    * Inference count: 18369
+    * Execution count: 586
+    * Successful request count: 18369
+    * Avg request latency: 230277 usec (overhead 12 usec + queue 107915 usec + compute input 178 usec + compute infer 122170 usec + compute output 1 usec)
+
+  * multilingual_e5_large_tokenize, version: 1
+    * Inference count: 18429
+    * Execution count: 1937
+    * Successful request count: 18429
+    * Avg request latency: 6124 usec (overhead 8 usec + queue 1621 usec + compute input 97 usec + compute infer 4397 usec + compute output 1 usec)
 
 * Inferences/Second vs. Client Average Batch Latency
-* Concurrency: 60, throughput: 285.136 infer/sec, latency 210118 usec
-
-
+* Concurrency: 60, throughput: 255.058 infer/sec, latency 234675 usec
 
 ## Validation
 To validate that the model is performing as expected, we calculate the performance on the
@@ -213,11 +233,11 @@ referenced in the technical approach. This approach is outlined in
 
 | Language Pairs | Margin Accuracy | Cosine Accuracy | # of Records |
 | :------------: | :-------------: | :-------------: | :----------: |
-| zh-en | 99.53 | 99.26 | 1,899 |
-| fr-en | 99.00 | 98.62 | 9,086 |
-| de-en | 99.61 | 99.52 | 9,580 |
-| ru-en | 97.94 | 97.74 | 14,435|
-| **Mean** | **98.76** | **98.54** | |
+| zh-en | 99.53 | 99.21 | 1,899 |
+| fr-en | 99.12 | 98.72 | 9,086 |
+| de-en | 99.63 | 99.54 | 9,580 |
+| ru-en | 97.91 | 97.71 | 14,435|
+| **Mean** | **98.79** | **98.55** | |
 
 These match well with the reported 98.6 in the technical report.
 

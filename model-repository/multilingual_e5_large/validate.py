@@ -87,7 +87,7 @@ class BitextBenchmark:
             ]
         }
         response = requests.post(
-            url=f"{self.base_url}/embed_text/infer", json=inference_json
+            url=f"{self.base_url}/multilingual_e5_large/infer", json=inference_json
         )
 
         return np.array(response.json()["outputs"][0]["data"]).astype(np.float32)

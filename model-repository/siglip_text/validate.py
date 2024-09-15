@@ -134,9 +134,8 @@ def zero_shot(labels_text: dict):
             prompt = f"A photo of a {text}."
             future = executor.submit(
                 requests.post,
-                url="http://localhost:8000/v2/models/embed_text/infer",
+                url="http://localhost:8000/v2/models/siglip_text/infer",
                 json={
-                    "parameters": {"embed_model": "siglip_text"},
                     "inputs": [
                         {
                             "name": "INPUT_TEXT",

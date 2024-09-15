@@ -163,5 +163,6 @@ cython_debug/
 
 *.tar.gz
 .task
+.ruff_cache
 models
 task.env
