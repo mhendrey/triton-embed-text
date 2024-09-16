@@ -68,17 +68,14 @@ class TritonPythonModel:
                 if not (text.startswith("query: ") or text.startswith("passage: ")):
                     raise ValueError(
                         f"'{text}' must start with 'query: ' or"
-                        + f"'passage: ' prefix when using e5_large_v2_tokenize. Note "
-                        + f"the space after the colon."
+                        + "'passage: ' prefix when using e5_large_v2_tokenize. Note "
+                        + "the space after the colon."
                     )
         except Exception as exc:
-            raise ValueError(
-                f"Failed on e5_large_v2_tokenize(text=input_text): {exc}"
-            )
+            raise ValueError(f"Failed on e5_large_v2_tokenize(text=input_text): {exc}")
 
         # Shape = [batch_size, 512], where batch_size should be 1
         return input_ids_np, attention_mask_np
-
 
     def execute(self, requests: list) -> list:
         """
@@ -108,14 +105,20 @@ class TritonPythonModel:
             except Exception as exc:
                 response = pb_utils.InferenceResponse(
                     output_tensors=[
-                        pb_utils.Tensor("INPUT_IDS", np.zeros((1, 512), dtype=np.int64)),
-                        pb_utils.Tensor("ATTENTION_MASK", np.zeros((1, 512), dtype=np.int64))
+                        pb_utils.Tensor(
+                            "INPUT_IDS", np.zeros((1, 512), dtype=np.int64)
+                        ),
+                        pb_utils.Tensor(
+                            "ATTENTION_MASK", np.zeros((1, 512), dtype=np.int64)
+                        ),
                     ],
-                    error=pb_utils.TritonError(f"{exc}")
+                    error=pb_utils.TritonError(f"{exc}"),
                 )
                 responses[batch_id] = response
             else:
-                response = pb_utils.InferenceResponse(output_tensors=[input_ids_tt, attention_mask_tt])
+                response = pb_utils.InferenceResponse(
+                    output_tensors=[input_ids_tt, attention_mask_tt]
+                )
                 responses[batch_id] = response
 
         return responses

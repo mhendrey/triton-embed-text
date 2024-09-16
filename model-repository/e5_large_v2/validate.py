@@ -3,16 +3,20 @@ import mteb
 import numpy as np
 import requests
 
-class MyModel():
+
+class MyModel:
     def __init__(self, base_url: str = "http://localhost:8000/v2/models"):
         self.base_url = base_url
 
     def encode(
-            self, sentences: list[str], prefix: str="query: ", **kwargs,
+        self,
+        sentences: list[str],
+        prefix: str = "query: ",
+        **kwargs,
     ) -> np.ndarray:
         """
         Encodes the given sentences using the encoder
-        
+
         Parameters
         ----------
         sentences: list[str]
@@ -39,12 +43,13 @@ class MyModel():
                         }
                     ]
                 }
-                future = executor.submit(requests.post,
+                future = executor.submit(
+                    requests.post,
                     url=f"{self.base_url}/e5_large_v2/infer",
                     json=inference_request,
                 )
                 futures[future] = i
-    
+
             for future in as_completed(futures):
                 try:
                     response_json = future.result().json()
@@ -63,15 +68,22 @@ class MyModel():
     def encode_queries(self, queries: list[str], **kwargs) -> np.ndarray:
         return self.encode(queries, prefix="query: ", **kwargs)
 
-    def encode_corpus(self, corpus: list[str] | list[dict[str,str]], **kwargs) -> np.ndarray:
+    def encode_corpus(
+        self, corpus: list[str] | list[dict[str, str]], **kwargs
+    ) -> np.ndarray:
         if isinstance(corpus, list) and isinstance(corpus[0], dict):
             corpus = [doc["title"] + " " + doc["text"] for doc in corpus]
         return self.encode(corpus, prefix="passage: ", **kwargs)
 
+
 def main():
     task_list = [
-        "STS15", "STS16", "SprintDuplicateQuestions", "TwitterSemEval2015",
-        "ArxivClusteringS2S", "RedditClustering"
+        "STS15",
+        "STS16",
+        "SprintDuplicateQuestions",
+        "TwitterSemEval2015",
+        "ArxivClusteringS2S",
+        "RedditClustering",
     ]
     tasks = mteb.get_tasks(tasks=task_list, languages=["eng"])
 
