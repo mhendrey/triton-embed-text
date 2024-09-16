@@ -205,41 +205,28 @@ Gives the following result on an RTX4090 GPU
 * Concurrency: 60, throughput: 266.84 infer/sec, latency 224480 usec
 
 ## Validation
-To validate that the model is performing as expected, we calculate the performance on the
-[BUCC Bitext Mining dataset](https://huggingface.co/datasets/mteb/bucc-bitext-mining)
-and compare the performance against results published in the
-[Multilingual E5 Text Embeddings: A Technical Report](https://arxiv.org/abs/2402.05672).
+To validate that the model is performing as expected, we calculate the performance on
+a subset of the [MTEB benchmark](https://github.com/embeddings-benchmark/mteb) and
+compare them against the results published in the
+[Text Embeddings by Weakly-Supervised Contrastive Pre-training](https://arxiv.org/pdf/2212.03533.pdf).
+and also described in their [github repo](https://github.com/microsoft/unilm/tree/master/e5)
 
-This dataset consists of 4 separate dataset with pairs of sentences in [zh-en, fr-en,
-de-en, and ru-en]. Table 5 in the paper reports that the Multilingual E5 large model
-achieved **98.6** on this benchmark. Unfortunately the paper doesn't give any details
-as to how they did the evaluation. In particular, the BUCC Biitext Mining dataset is
-supposed to consist of non-parallel sentences with only about 2-3% of the sentences
-having a corresponding translated sentence in the other language. However, the
-Huggingface test data has aligned sentences. This may make the task much too easy, but
-we will proceed in the absence of more information.
-
-For each language pair dataset, we query with one side and calculate the top-1 accuracy
-of finding the corresponding pair in the other language. We calculate a weighted
-average across the four sets of language pairs to get a single number. We use
-approximate nearest neighbors to perform the search of the 4 nearest neighbors based
-upon the cosine distance. We then perform two separate reranking methods before
-choosing the top nearest neighbor from this candidate list.  The first is just the
-cosine distance itself. The second is based upon a margin scoring approach that is
-referenced in the technical approach. This approach is outlined in
-[Margin-based Parallel Corpus Mining with Multilingual Sentence Embeddings](https://arxiv.org/abs/1811.01136).
+We compare the performance against Table 17 in the paper for EmotionClassification,
+TweetSentimentExtractionClassification, SprintDuplicateQuestions, TwitterSemEval2015,
+STS15, and STSBenchmark.
 
 ### Results
+| Task | Score | Reported in paper |
+| --- | --- | --- |
+|EmotionClassification | 0.503| 0.435 |
+|TweetSentimentExtractionClassification | 0.624| 0.525 |
+|SprintDuplicateQuestions | 0.949| 0.920 |
+|TwitterSemEval2015 | 0.769| 0.647 |
+|STS15 | 0.898| 0.758 |
+|STSBenchmark | 0.877| 0.709 |
 
-| Language Pairs | Margin Accuracy | Cosine Accuracy | # of Records |
-| :------------: | :-------------: | :-------------: | :----------: |
-| zh-en | 99.53 | 99.21 | 1,899 |
-| fr-en | 99.12 | 98.72 | 9,086 |
-| de-en | 99.63 | 99.54 | 9,580 |
-| ru-en | 97.91 | 97.71 | 14,435|
-| **Mean** | **98.79** | **98.55** | |
-
-These match well with the reported 98.6 in the technical report.
+Every one of these scores is higher than those reported in the original E5 paper, so
+it appears that the v2 model is an improvement.
 
 ### Code
-The code is available in [model_repository/multilingual_e5_large/validate.py](../model_repository/multilingual_e5_large/validate.py)
+The code is available in [model_repository/e5_large_v2/validate.py](../model_repository/e5_large_v2/validate.py)

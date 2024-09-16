@@ -78,20 +78,22 @@ class MyModel:
 
 def main():
     task_list = [
-        "STS15",
-        "STS16",
+        "EmotionClassification",
+        "TweetSentimentExtractionClassification",
         "SprintDuplicateQuestions",
         "TwitterSemEval2015",
-        "ArxivClusteringS2S",
-        "RedditClustering",
+        "STS15",
+        "STSBenchmark",
     ]
     tasks = mteb.get_tasks(tasks=task_list, languages=["eng"])
 
     evaluation = mteb.MTEB(tasks=tasks, eval_splits=["test"])
     model = MyModel()
     results = evaluation.run(model, output_folder=None, eval_splits=["test"])
+    print("| Task | Score |")
+    print("| --- | --- |")
     for result in results:
-        print(f"{result.task_name} {result.score}")
+        print(f"|{result.task_name} | {result.scores['test'][0]['main_score']}|")
 
 
 if __name__ == "__main__":
