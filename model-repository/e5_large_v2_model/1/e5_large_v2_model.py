@@ -54,7 +54,7 @@ class TritonPythonModel:
             torch_dtype = torch.float32  # CPUs can't handle float16
 
         self.model = AutoModel.from_pretrained(
-            "intfloat/multilingual-e5-large",
+            "intfloat/e5-large-v2",
             device_map="auto",
             torch_dtype=torch_dtype,
             use_safetensors=True,
