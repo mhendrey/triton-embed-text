@@ -23,5 +23,5 @@ dependencies:
   - black
   - autoflake
   - pip
-   #- pip:
-     # pip deps
+  - pip:
+      - mteb

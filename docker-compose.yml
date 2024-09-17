@@ -10,6 +10,9 @@ x-base_inference_service: &base_inference_service
       --model-repository=${TRITON_INFERENCE_SERVER_MODEL_REPO:-/model-repository} \
       --model-control-mode=${TRITON_INERENCE_SERVER_MODEL_CONTROL_MODE:-explicit} \
       --model-config-name=${TRITON_INERENCE_SERVER_MODEL_CONFIG_NAME:-"config"} \
+      --load-model=e5_large_v2 \
+      --load-model=e5_large_v2_tokenize \
+      --load-model=e5_large_v2_model \
       --load-model=embed_text \
       --load-model=multilingual_e5_large \
       --load-model=multilingual_e5_large_tokenize \
@@ -21,7 +24,7 @@ x-base_inference_service: &base_inference_service
       --log-format=ISO8601 \
       --log-info=true \
       --http-header-forward-pattern=".*" \
-      --exit-on-error=false
+      --exit-on-error=true
   environment:
     - PYTHONNOUSERSITE=True
     - PYTHONDONTWRITEBYTECODE=1

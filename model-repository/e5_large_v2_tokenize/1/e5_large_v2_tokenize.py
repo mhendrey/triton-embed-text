@@ -7,7 +7,7 @@ import triton_python_backend_utils as pb_utils
 class TritonPythonModel:
     """
     Triton Inference Server deployment utilizing the python_backend for
-    multilingual-e5-large tokenization.
+    e5-large-v2 tokenization.
     """
 
     def initialize(self, args):
@@ -20,7 +20,7 @@ class TritonPythonModel:
             Command-line arguments for launching Triton Inference Server
         """
         self.tokenizer = AutoTokenizer.from_pretrained(
-            "intfloat/multilingual-e5-large", local_files_only=True
+            "intfloat/e5-large-v2", local_files_only=True
         )
 
     def process_request(self, request):
@@ -75,18 +75,14 @@ class TritonPythonModel:
                 if not (text.startswith("query: ") or text.startswith("passage: ")):
                     raise ValueError(
                         f"'{text}' must start with 'query: ' or"
-                        + f"'passage: ' prefix when using "
-                        + f"multilingual_e5_large_tokenize. Note "
-                        + f"the space after the colon."
+                        + "'passage: ' prefix when using e5_large_v2_tokenize. Note "
+                        + "the space after the colon."
                     )
         except Exception as exc:
-            raise ValueError(
-                f"Failed on multilingual_e5_large_tokenize(text=input_text): {exc}"
-            )
+            raise ValueError(f"Failed on e5_large_v2_tokenize(text=input_text): {exc}")
 
         # Shape = [batch_size, 512], where batch_size should be 1
         return input_ids_np, attention_mask_np
-
 
     def execute(self, requests: list) -> list:
         """
@@ -106,7 +102,7 @@ class TritonPythonModel:
         """
         logger = pb_utils.Logger
         batch_size = len(requests)
-        logger.log_info(f"multilingual_e5_large_tokenize.execute received {batch_size} requests")
+        logger.log_info(f"e5_large_v2_tokenize.execute received {batch_size} requests")
         responses = [None] * batch_size
         for batch_id, request in enumerate(requests):
             try:
@@ -116,14 +112,20 @@ class TritonPythonModel:
             except Exception as exc:
                 response = pb_utils.InferenceResponse(
                     output_tensors=[
-                        pb_utils.Tensor("INPUT_IDS", np.zeros((1, 512), dtype=np.int64)),
-                        pb_utils.Tensor("ATTENTION_MASK", np.zeros((1, 512), dtype=np.int64))
+                        pb_utils.Tensor(
+                            "INPUT_IDS", np.zeros((1, 512), dtype=np.int64)
+                        ),
+                        pb_utils.Tensor(
+                            "ATTENTION_MASK", np.zeros((1, 512), dtype=np.int64)
+                        ),
                     ],
-                    error=pb_utils.TritonError(f"{exc}")
+                    error=pb_utils.TritonError(f"{exc}"),
                 )
                 responses[batch_id] = response
             else:
-                response = pb_utils.InferenceResponse(output_tensors=[input_ids_tt, attention_mask_tt])
+                response = pb_utils.InferenceResponse(
+                    output_tensors=[input_ids_tt, attention_mask_tt]
+                )
                 responses[batch_id] = response
 
         return responses

@@ -1,6 +1,5 @@
 import asyncio
 import json
-from transformers import AutoProcessor, AutoTokenizer
 
 import triton_python_backend_utils as pb_utils
 
@@ -22,7 +21,7 @@ class TritonPythonModel:
         """
         self.model_config = model_config = json.loads(args["model_config"])
 
-        self.embed_models = set(["multilingual_e5_large", "siglip_text"])
+        self.embed_models = set(["multilingual_e5_large", "siglip_text", "e5_large_v2"])
         # Specify the default embedding model. Can be overriden in request parameter
         self.default_embed_model = model_config["parameters"]["default_embed_model"][
             "string_value"
