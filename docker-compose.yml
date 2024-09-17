@@ -13,6 +13,13 @@ x-base_inference_service: &base_inference_service
       --load-model=e5_large_v2 \
       --load-model=e5_large_v2_tokenize \
       --load-model=e5_large_v2_model \
+      --load-model=embed_text \
+      --load-model=multilingual_e5_large \
+      --load-model=multilingual_e5_large_tokenize \
+      --load-model=multilingual_e5_large_model \
+      --load-model=siglip_text \
+      --load-model=siglip_text_tokenize \
+      --load-model=siglip_text_model \
       --log-verbose=1 \
       --log-format=ISO8601 \
       --log-info=true \

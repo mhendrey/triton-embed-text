@@ -49,6 +49,13 @@ class TritonPythonModel:
         except Exception as exc:
             raise ValueError(f"Failed on converting numpy to str request data: {exc}")
 
+        # Make sure that input text is not empty
+        if len(input_text[0]) == 0:
+            raise ValueError(
+                "You appeared to have submitted an empty string. Received: "
+                + f"'{input_text[0]}'"
+            )
+
         try:
             inputs = self.tokenizer(
                 text=input_text, padding="max_length", return_tensors="pt"

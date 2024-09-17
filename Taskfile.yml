@@ -16,13 +16,12 @@ tasks:
     cmds:
       - docker compose -f docker-compose.yml --profile {{.COMPUTE_TYPE}} up -d
     preconditions:
-      - test -f ./model-repository/embed_text/embed_text.tar.gz
+      - test -f ./model-repository/e5_large_v2_tokenize/e5_large_v2_tokenize.tar.gz
+      - test -f ./model-repository/e5_large_v2_model/e5_large_v2_model.tar.gz
       - test -f ./model-repository/multilingual_e5_large_model/multilingual_e5_large_model.tar.gz
       - test -f ./model-repository/multilingual_e5_large_tokenize/multilingual_e5_large_tokenize.tar.gz
       - test -f ./model-repository/siglip_text_model/siglip_text_model.tar.gz
       - test -f ./model-repository/siglip_text_tokenize/siglip_text_tokenize.tar.gz
-      - test -f ./model-repository/e5_large_v2_tokenize/e5_large_v2_tokenize.tar.gz
-      - test -f ./model-repository/e5_large_v2_model/e5_large_v2_model.tar.gz
 
 
   triton-stop:
@@ -45,13 +44,12 @@ tasks:
   build-execution-env-all:
     desc: "Tasks to build all execution environments"
     deps: [
-      build-embed_text-env,
+      build-e5_large_v2_model-env,
+      build-e5_large_v2_tokenize-env,
       build-multilingual_e5_large_model-env,
       build-multilingual_e5_large_tokenize-env,
-      build-siglip_text-env,
+      build-siglip_text_model-env,
       build-siglip_text_tokenize-env,
-      build-e5_large_v2_tokenize-env,
-      build-e5_large_v2_model-env,
     ]
 
   build-*-env:

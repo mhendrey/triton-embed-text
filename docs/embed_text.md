@@ -331,79 +331,232 @@ sdk-container:/workspace perf_analyzer \
 ```
 Gives the following result on an RTX4090 GPU
 
-
 * Request concurrency: 60
-  * Pass [1] throughput: 1249.58 infer/sec. Avg latency: 47992 usec (std 16351 usec). 
-  * Pass [2] throughput: 1195.9 infer/sec. Avg latency: 50114 usec (std 16807 usec). 
-  * Pass [3] throughput: 1256.97 infer/sec. Avg latency: 47690 usec (std 16921 usec). 
+  * Pass [1] throughput: 1257.01 infer/sec. Avg latency: 47656 usec (std 16454 usec). 
+  * Pass [2] throughput: 1282.46 infer/sec. Avg latency: 46829 usec (std 16034 usec). 
+  * Pass [3] throughput: 1269.33 infer/sec. Avg latency: 47268 usec (std 15954 usec). 
   * Client: 
-    * Request count: 88962
-    * Throughput: 1234.13 infer/sec
-    * Avg client overhead: 0.07%
-    * Avg latency: 48575 usec (standard deviation 8513 usec)
-    * p50 latency: 54092 usec
-    * p90 latency: 66502 usec
-    * p95 latency: 70520 usec
-    * p99 latency: 79908 usec
-    * Avg gRPC time: 48564 usec (marshal 3 usec + response wait 48561 usec + unmarshal 0 usec)
+    * Request count: 91526
+    * Throughput: 1269.61 infer/sec
+    * Avg client overhead: 0.08%
+    * Avg latency: 47248 usec (standard deviation 7701 usec)
+    * p50 latency: 53086 usec
+    * p90 latency: 64418 usec
+    * p95 latency: 67270 usec
+    * p99 latency: 76386 usec
+    * Avg gRPC time: 47236 usec (marshal 3 usec + response wait 47233 usec + unmarshal 0 usec)
   * Server: 
-    * Inference count: 88962
-    * Execution count: 7354
-    * Successful request count: 88962
-    * Avg request latency: 50180 usec (overhead 25411 usec + queue 6904 usec + compute 17865 usec)
+    * Inference count: 91526
+    * Execution count: 7231
+    * Successful request count: 91526
+    * Avg request latency: 48743 usec (overhead 24050 usec + queue 7233 usec + compute 17460 usec)
 
   * Composing models: 
   * siglip_text, version: 1
-      * Inference count: 88990
-      * Execution count: 88990
-      * Successful request count: 88990
-      * Avg request latency: 24556 usec (overhead 0 usec + queue 6904 usec + compute 17865 usec)
-
-    * Composing models: 
-    * siglip_text_model, version: 1
-        * Inference count: 88990
-        * Execution count: 6699
-        * Successful request count: 88990
-        * Avg request latency: 19574 usec (overhead 10 usec + queue 6024 usec + compute input 93 usec + compute infer 13445 usec + compute output 1 usec)
-
-    * siglip_text_tokenize, version: 1
-        * Inference count: 89022
-        * Execution count: 13956
-        * Successful request count: 89022
-        * Avg request latency: 5237 usec (overhead 32 usec + queue 880 usec + compute input 95 usec + compute infer 4228 usec + compute output 1 usec)
-
-* Inferences/Second vs. Client Average Batch Latency
-* Concurrency: 60, throughput: 1234.13 infer/sec, latency 48575 usec
-
-* Request concurrency: 60
-  * Pass [1] throughput: 1183.76 infer/sec. Avg latency: 50612 usec (std 4734 usec). 
-  * Pass [2] throughput: 1180.5 infer/sec. Avg latency: 50878 usec (std 4474 usec). 
-  * Pass [3] throughput: 1183.16 infer/sec. Avg latency: 50653 usec (std 4160 usec). 
-  * Client: 
-    * Request count: 85231
-    * Throughput: 1182.47 infer/sec
-    * Avg client overhead: 0.07%
-    * Avg latency: 50715 usec (standard deviation 4463 usec)
-    * p50 latency: 49712 usec
-    * p90 latency: 55982 usec
-    * p95 latency: 59582 usec
-    * p99 latency: 67712 usec
-    * Avg gRPC time: 50705 usec (marshal 2 usec + response wait 50703 usec + unmarshal 0 usec)
-  * Server: 
-    * Inference count: 85231
-    * Execution count: 1422
-    * Successful request count: 85231
-    * Avg request latency: 51241 usec (overhead 35390 usec + queue 6511 usec + compute 9340 usec)
+      * Inference count: 91526
+      * Execution count: 91526
+      * Successful request count: 91526
+      * Avg request latency: 24475 usec (overhead 0 usec + queue 7233 usec + compute 17460 usec)
 
   * Composing models: 
-  * siglip_text, version: 1
-      * Inference count: 85260
-      * Execution count: 8536
-      * Successful request count: 85260
-      * Avg request latency: 15861 usec (overhead 10 usec + queue 6511 usec + compute input 60 usec + compute infer 9202 usec + compute output 77 usec)
+  * siglip_text_model, version: 1
+      * Inference count: 91526
+      * Execution count: 6702
+      * Successful request count: 91526
+      * Avg request latency: 19452 usec (overhead 11 usec + queue 6274 usec + compute input 93 usec + compute infer 13073 usec + compute output 1 usec)
+
+  * siglip_text_tokenize, version: 1
+      * Inference count: 91527
+      * Execution count: 13838
+      * Successful request count: 91527
+      * Avg request latency: 5282 usec (overhead 30 usec + queue 959 usec + compute input 94 usec + compute infer 4197 usec + compute output 1 usec)
 
 * Inferences/Second vs. Client Average Batch Latency
-* Concurrency: 60, throughput: 1182.47 infer/sec, latency 50715 usec
+* Concurrency: 60, throughput: 1269.61 infer/sec, latency 47248 usec
+
 
 ### Validation
 See the [SigLIP Text](./siglip_text.md) validation section for details.
+
+
+## E5 Large v2 Text Embeddings
+For optimal performance, all text sent must have either "query: " or "passage: "
+prepended to your text. Notice that there is a space after the colon. See the **NOTE**
+in [E5 Large v2](e5_large_v2.md) about when to use one vs the other.
+
+### Send Single Request
+```
+import numpy as np
+import requests
+
+base_url = "http://localhost:8000/v2/models"
+
+text = (
+    "query: The iridescent chameleon sauntered across the neon-lit cyberpunk cityscape."
+)
+inference_json = {
+    "parameters": {"embed_model": "e5_large_v2"},
+    "inputs": [
+        {
+            "name": "INPUT_TEXT",
+            "shape": [1, 1],
+            "datatype": "BYTES",
+            "data": [text],
+        }
+    ]
+}
+text_embed_response = requests.post(
+    url=f"{base_url}/embed_text/infer",
+    json=inference_json,
+)
+
+response_json = text_embed_response.json()
+"""
+{
+    "model_name": "embed_text",
+    "model_version": "1",
+    "outputs": [
+        {
+            "name": "EMBEDDING",
+            "shape": [1, 1024],
+            "datatype": "FP32",
+            "data": [
+                0.033483,
+               -0.082776,
+                0.056425,
+                ...,
+            ]
+        }
+    ]
+}
+"""
+text_embedding = np.array(response_json["outputs"][0]["data"]).astype(np.float32)
+```
+
+### Sending Many Requests
+When embedding multiple text strings, use multithreading to send requests in parallel,
+which maximizes throughput and efficiency.
+
+NOTE: You will encounter an "OSError: Too many open files" if you send a lot of
+requests. Typically the default ulimit is 1024 on most system. Either increase this
+using `ulimit -n {n_files}`, or don't create too many futures before you processing
+some of them.
+
+```
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import numpy as np
+import requests
+
+base_url = "http://localhost:8000/v2/models"
+
+texts = [
+    "query: Did Palpatine die in The Return of the Jedi?",
+    "query: What causes ocean tides?",
+    "query: How does photosynthesis work in plants?",
+    "query: Explain the concept of supply and demand in economics.",
+    "query: What is the difference between weather and climate?",
+    "query: How does the human immune system defend against pathogens?",
+    "query: How are artificial intelligence models created?",
+]
+
+futures = {}
+embeddings = {}
+with ThreadPoolExecutor(max_workers=60) as executor:
+    for i, text in enumerate(texts):
+        infer_request = {
+            "parameters": {"embed_model": "e5_large_v2"},
+            "inputs": [
+                {
+                    "name": "INPUT_TEXT",
+                    "shape": [1, 1],
+                    "datatype": "BYTES",
+                    "data": [text],
+                }
+            ]
+        }
+        future = executor.submit(requests.post,
+            url=f"{base_url}/embed_text/infer",
+            json=infer_request,
+        )
+        futures[future] = i
+    
+    for future in as_completed(futures):
+        try:
+            response_json = future.result().json()
+        except Exception as exc:
+            print(f"{futures[future]} threw {exc}")
+        if "error" not in response_json:
+            embedding = response_json["outputs"][0]["data"]
+            embedding = np.array(embedding).astype(np.float32)
+            embeddings[futures[future]] = embedding
+        else:
+            print(f"{futures[future]} threw {response_json['error']}")
+print(embeddings)
+```
+
+### Performance Analysis
+There is some data in [data/embed_text](../data/embed_text/e5_large_v2_text.json)
+which can be used with the `perf_analyzer` CLI in the Triton Inference Server SDK
+container to measure the throughput of the E5 Large v2 Text model.
+
+```
+sdk-container:/workspace perf_analyzer \
+    -m embed_text \
+    -v \
+    -i grpc \
+    --input-data data/embed_text/e5_large_v2_text.json \
+    --measurement-mode=time_windows \
+    --measurement-interval=20000 \
+    --concurrency-range=60 \
+    --latency-threshold=1000 \
+    --bls-composing=e5_large_v2 \
+    --request-parameter=embed_model:e5_large_v2:string
+```
+Gives the following result on an RTX4090 GPU
+
+* Request concurrency: 60
+  * Pass [1] throughput: 254.506 infer/sec. Avg latency: 233597 usec (std 52831 usec). 
+  * Pass [2] throughput: 259.104 infer/sec. Avg latency: 233241 usec (std 51816 usec). 
+  * Pass [3] throughput: 256.531 infer/sec. Avg latency: 234004 usec (std 51862 usec). 
+  * Client: 
+    * Request count: 18490
+    * Throughput: 256.714 infer/sec
+    * Avg client overhead: 0.02%
+    * Avg latency: 233613 usec (standard deviation 26944 usec)
+    * p50 latency: 248912 usec
+    * p90 latency: 258105 usec
+    * p95 latency: 262214 usec
+    * p99 latency: 286423 usec
+    * Avg gRPC time: 233602 usec (marshal 2 usec + response wait 233600 usec + unmarshal 0 usec)
+  * Server: 
+    * Inference count: 18490
+    * Execution count: 2014
+    * Successful request count: 18490
+    * Avg request latency: 235605 usec (overhead 134852 usec + queue 23033 usec + compute 77720 usec)
+
+  * Composing models: 
+  * e5_large_v2, version: 1
+      * Inference count: 18491
+      * Execution count: 18491
+      * Successful request count: 18491
+      * Avg request latency: 100414 usec (overhead 0 usec + queue 23033 usec + compute 77720 usec)
+
+  * Composing models: 
+  * e5_large_v2_model, version: 1
+      * Inference count: 18491
+      * Execution count: 1795
+      * Successful request count: 18491
+      * Avg request latency: 93983 usec (overhead 11 usec + queue 22009 usec + compute input 125 usec + compute infer 71836 usec + compute output 1 usec)
+
+  * e5_large_v2_tokenize, version: 1
+      * Inference count: 18521
+      * Execution count: 3519
+      * Successful request count: 18521
+      * Avg request latency: 6802 usec (overhead 21 usec + queue 1024 usec + compute input 92 usec + compute infer 5664 usec + compute output 1 usec)
+
+* Inferences/Second vs. Client Average Batch Latency
+* Concurrency: 60, throughput: 256.714 infer/sec, latency 233613 usec
+
+
+### Validation
+See the [E5 Large v2](./e5_large_v2.md) validation section for details.
