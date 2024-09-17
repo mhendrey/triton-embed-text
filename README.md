@@ -21,6 +21,8 @@ used by most clients. Currently supported models accessible within embed_text:
 * [SigLIP Text](docs/siglip_text.md)
   Use in conjunction with SigLIP Vision to perform zero-shot learning or semantic
   searching of images with textual descriptions.
+* [E5 Large v2](docs/e5_large_v2.md)
+  English only text embedding model. Useful for tasks that require English text embeddings.
   
 ## Running Tasks
 Running tasks is orchestrated by using [Taskfile.dev](https://taskfile.dev/)
