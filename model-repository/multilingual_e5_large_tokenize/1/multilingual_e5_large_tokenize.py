@@ -30,10 +30,14 @@ class TritonPythonModel:
             self.default_truncation = False
         elif default_truncation in ["True", "true"]:
             self.default_truncation = True
+        elif default_truncation in ["longest_first", "only_first", "only_second", "do_not_truncate"]:
+            self.default_truncation = default_truncation
         else:
             raise ValueError(
-                f"{default_truncation=:} must be 'true' | 'True' | 'false' | 'False'"
+                f"{default_truncation=:} does not match "
+                "transformers.tokenizer.__call__ options"
             )
+
 
         self.tokenizer = AutoTokenizer.from_pretrained(
             "intfloat/multilingual-e5-large", local_files_only=True
@@ -61,8 +65,6 @@ class TritonPythonModel:
         # Handle any request parameters
         request_params = json.loads(request.parameters())
         truncation = request_params.get("truncation", self.default_truncation)
-        if not isinstance(truncation, bool):
-            raise ValueError(f"truncation request parameter must be type bool")
 
         try:
             input_text = [

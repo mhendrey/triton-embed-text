@@ -34,9 +34,12 @@ class TritonPythonModel:
             self.default_truncation = False
         elif default_truncation in ["True", "true"]:
             self.default_truncation = True
+        elif default_truncation in ["longest_first", "only_first", "only_second", "do_not_truncate"]:
+            self.default_truncation = default_truncation
         else:
             raise ValueError(
-                f"{default_truncation=:} must be 'true' | 'True' | 'false' | 'False'"
+                f"{default_truncation=:} does not match "
+                "transformers.tokenizer.__call__ options"
             )
 
     async def execute(self, requests: list) -> list:
@@ -75,15 +78,6 @@ class TritonPythonModel:
                 responses[batch_id] = pb_utils.InferenceResponse(
                     error=pb_utils.TritonError(
                         f"{embed_model=:} not in {self.embed_models}"
-                    )
-                )
-                continue
-
-            if not isinstance(truncation, bool):
-                responses[batch_id] = pb_utils.InferenceResponse(
-                    error=pb_utils.TritonError(
-                        f"truncation request parameter type is {type(truncation)} "
-                        "must be type bool"
                     )
                 )
                 continue
