@@ -26,6 +26,12 @@ separately.
 This is a lower level of abstraction, most clients likely should be using
 [embed_text](embed_text.md) deployment.
 
+Optional Request Parameters:
+* `truncation`: bool, optional, default=False
+  Set to true if you want to truncate provided text to maximum length (512 tokens)
+  supported by the model. Otherwise, if the provided text is too many tokens, an error
+  will be returned.
+
 ## Example Request
 Here's an example request. Just a few things to point out
 1. "shape": [1, 1] because we have dynamic batching and the first axis is

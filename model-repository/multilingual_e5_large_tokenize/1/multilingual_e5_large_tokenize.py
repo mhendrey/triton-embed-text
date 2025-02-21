@@ -1,3 +1,4 @@
+import json
 import numpy as np
 from transformers import AutoTokenizer
 
@@ -19,6 +20,21 @@ class TritonPythonModel:
         args : dict
             Command-line arguments for launching Triton Inference Server
         """
+        self.model_config = model_config = json.loads(args["model_config"])
+
+        # Specify the default truncate value. Can be overridden in request parameter
+        default_truncation = model_config["parameters"]["default_truncation"][
+            "string_value"
+        ]
+        if default_truncation in ["False", "false"]:
+            self.default_truncation = False
+        elif default_truncation in ["True", "true"]:
+            self.default_truncation = True
+        else:
+            raise ValueError(
+                f"{default_truncation=:} must be 'true' | 'True' | 'false' | 'False'"
+            )
+
         self.tokenizer = AutoTokenizer.from_pretrained(
             "intfloat/multilingual-e5-large", local_files_only=True
         )
@@ -42,6 +58,12 @@ class TritonPythonModel:
         except Exception as exc:
             raise ValueError(f"Failed on getting input tensor from request: {exc}")
 
+        # Handle any request parameters
+        request_params = json.loads(request.parameters())
+        truncation = request_params.get("truncation", self.default_truncation)
+        if not isinstance(truncation, bool):
+            raise ValueError(f"truncation request parameter must be type bool")
+
         try:
             input_text = [
                 b.decode("utf-8") for b in input_text_tt.as_numpy().reshape(-1)
@@ -58,7 +80,10 @@ class TritonPythonModel:
 
         try:
             inputs = self.tokenizer(
-                text=input_text, padding="max_length", return_tensors="pt"
+                text=input_text,
+                padding="max_length",
+                truncation=truncation,
+                return_tensors="pt",
             )
             input_ids_np = inputs["input_ids"].numpy()
             attention_mask_np = inputs["attention_mask"].numpy()
@@ -69,7 +94,10 @@ class TritonPythonModel:
             # something that could severely impact performance
             if n_tokens > 512:
                 raise ValueError(
-                    f"Processing {input_text} has {n_tokens} tokens which exceeds max of 512."
+                    f"Processing {input_text} has {n_tokens} tokens which "
+                    "exceeds max of 512. You could try setting request parameter "
+                    "`truncation` to 'True' if you want to just use the first 512 "
+                    "tokens"
                 )
             for text in input_text:
                 if not (text.startswith("query: ") or text.startswith("passage: ")):
@@ -86,7 +114,6 @@ class TritonPythonModel:
 
         # Shape = [batch_size, 512], where batch_size should be 1
         return input_ids_np, attention_mask_np
-
 
     def execute(self, requests: list) -> list:
         """
@@ -106,7 +133,9 @@ class TritonPythonModel:
         """
         logger = pb_utils.Logger
         batch_size = len(requests)
-        logger.log_info(f"multilingual_e5_large_tokenize.execute received {batch_size} requests")
+        logger.log_info(
+            f"multilingual_e5_large_tokenize.execute received {batch_size} requests"
+        )
         responses = [None] * batch_size
         for batch_id, request in enumerate(requests):
             try:
@@ -116,14 +145,20 @@ class TritonPythonModel:
             except Exception as exc:
                 response = pb_utils.InferenceResponse(
                     output_tensors=[
-                        pb_utils.Tensor("INPUT_IDS", np.zeros((1, 512), dtype=np.int64)),
-                        pb_utils.Tensor("ATTENTION_MASK", np.zeros((1, 512), dtype=np.int64))
+                        pb_utils.Tensor(
+                            "INPUT_IDS", np.zeros((1, 512), dtype=np.int64)
+                        ),
+                        pb_utils.Tensor(
+                            "ATTENTION_MASK", np.zeros((1, 512), dtype=np.int64)
+                        ),
                     ],
-                    error=pb_utils.TritonError(f"{exc}")
+                    error=pb_utils.TritonError(f"{exc}"),
                 )
                 responses[batch_id] = response
             else:
-                response = pb_utils.InferenceResponse(output_tensors=[input_ids_tt, attention_mask_tt])
+                response = pb_utils.InferenceResponse(
+                    output_tensors=[input_ids_tt, attention_mask_tt]
+                )
                 responses[batch_id] = response
 
         return responses

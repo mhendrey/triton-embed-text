@@ -12,8 +12,11 @@ addition, this allows for controlling the GPU RAM consumed by the server.
 
 Optional Request Parameters:
 * `embed_model`: str, optional, default="multilingual_e5_large"
-  Specify which embedding model to use. Choices are `multilingual_e5_large` or
-  `siglip_text`.
+  Specify which embedding model to use. Choices are `multilingual_e5_large`,
+  `siglip_text`, or `e5_large_v2`
+* `truncation`: bool, optional, default=False
+  Set to true if you want to truncate provided text to maximum length supported by the
+  model. Otherwise, if the provided text is too many tokens, an error will be returned.
 
 ## Multilingual E5 Text Embeddings
 For optimal performance, all text sent must have either "query: " or "passage: "
@@ -65,6 +68,27 @@ response_json = text_embed_response.json()
     ]
 }
 """
+text_embedding = np.array(response_json["outputs"][0]["data"]).astype(np.float32)
+
+# Try using longer text but with truncation request parameter
+text = 50*text
+inference_json = {
+    "parameters": {"truncation": True},
+    "inputs": [
+        {
+            "name": "INPUT_TEXT",
+            "shape": [1, 1],
+            "datatype": "BYTES",
+            "data": [text],
+        }
+    ]
+}
+text_embed_response = requests.post(
+    url=f"{base_url}/embed_text/infer",
+    json=inference_json,
+)
+
+response_json = text_embed_response.json()
 text_embedding = np.array(response_json["outputs"][0]["data"]).astype(np.float32)
 ```
 
